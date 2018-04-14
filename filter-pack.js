@@ -31,7 +31,7 @@
 	function registerRecentLessonsFilter() {
 		wkof.ItemData.registry.sources.wk_items.filters.seanblue_recentLessons = {
 			type: 'number',
-			label: 'Recen Lessons',
+			label: 'Recent Lessons',
 			default: 24,
 			filter_func: recentLessonsFilter,
 			set_options: function(options) { options.assignments = true; },
