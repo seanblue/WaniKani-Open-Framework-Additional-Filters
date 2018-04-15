@@ -72,15 +72,21 @@
 	}
 
 	function saveSettings(){
-		settingsDialog.save();
+		settingsDialog.save().then(function() {
+			registerFilters();
+		});
 	}
 
 	function registerFilters() {
 		if (wkof.settings[settingsScriptId][recentLessonsSettingName])
 			registerRecentLessonsFilter();
+		else
+			deleteRecentLessonsFilter();
 
 		if (wkof.settings[settingsScriptId][leechesSettingName])
 			registerLeechesFilter();
+		else
+			deleteLeechesFilter();
 	}
 
 	// BEGIN Recent Lessons
@@ -93,6 +99,10 @@
 			set_options: function(options) { options.assignments = true; },
 			hover_tip: recentLessonsHoverTip
 		};
+	}
+
+	function deleteRecentLessonsFilter() {
+		delete wkof.ItemData.registry.sources.wk_items.filters.seanblue_recentLessons;
 	}
 
 	function recentLessonsFilter(filterValue, item) {
@@ -123,6 +133,10 @@
 		};
 	}
 
+	function deleteLeechesFilter() {
+		delete wkof.ItemData.registry.sources.wk_items.filters.seanblue_leeches;
+	}
+
 	function leechesFilter(filterValue, item) {
 		if (item.review_statistics === undefined)
 			return false;
@@ -138,5 +152,4 @@
 		return incorrect / Math.pow((currentStreak || 0.5), 1.5);
 	}
 	// END Leeches
-
 })();
