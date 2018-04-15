@@ -11,6 +11,21 @@
 (function() {
 	'use strict';
 
+	var settingsDialog;
+	var settingsScriptId = 'additionalFilters';
+	var settingsTitle = 'Additional Filters';
+
+	var recentLessonsSettingName = 'includeRecentLessonsFilter';
+	var leechesSettingName = 'includeLeechesFilter';
+
+	var defaultSettings = {};
+	defaultSettings[recentLessonsSettingName] = true;
+	defaultSettings[leechesSettingName] = true;
+
+	var recentLessonsHoverTip = 'Filter items to show lessons taken in the last X hours.';
+	var leechesSummaryHoverTip = 'Only include leeches. Formula: incorrect / currentStreak^1.5.';
+	var leechesHoverTip = leechesSummaryHoverTip + '\n * Setting the value to 1 will include items that have just been answered incorrectly for the first time.\n * Setting the value to 1.01 will exclude items that have just been answered incorrectly for the first time.\n * The higher the value, the fewer items will be included as leeches.';
+
 	var msToHoursDivisor = 3600000;
 
 	if (!window.wkof) {
@@ -19,12 +34,53 @@
 		return;
 	}
 
-	wkof.include('ItemData');
-	wkof.ready('ItemData').then(registerFilters);
+	wkof.include('Menu, Settings, ItemData');
+
+	wkof.ready('Menu').then(installMenu);
+	var settingsLoadedPromise = wkof.ready('Settings').then(installSettings);
+	Promise.all([settingsLoadedPromise, wkof.ready('ItemData')]).then(registerFilters);
+
+	function installMenu() {
+		wkof.Menu.insert_script_link({
+			script_id: settingsScriptId,
+			submenu: 'Settings',
+			title: settingsTitle,
+			on_click: openSettings
+		});
+	}
+
+	function openSettings() {
+		settingsDialog.open();
+	}
+
+	function installSettings() {
+		var settings = {};
+		settings[recentLessonsSettingName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
+		settings[leechesSettingName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
+
+		settingsDialog = new wkof.Settings({
+			script_id: settingsScriptId,
+			title: settingsTitle,
+			on_save: saveSettings,
+			settings: settings
+		});
+
+		return settingsDialog.load().then(function() {
+			wkof.settings[settingsScriptId] = $.extend(true, {}, defaultSettings, wkof.settings[settingsScriptId]);
+			settingsDialog.save();
+		});
+	}
+
+	function saveSettings(){
+		settingsDialog.save();
+	}
 
 	function registerFilters() {
-		registerRecentLessonsFilter();
-		registerLeechesFilter();
+		if (wkof.settings[settingsScriptId][recentLessonsSettingName])
+			registerRecentLessonsFilter();
+
+		if (wkof.settings[settingsScriptId][leechesSettingName])
+			registerLeechesFilter();
 	}
 
 	// BEGIN Recent Lessons
@@ -35,7 +91,7 @@
 			default: 24,
 			filter_func: recentLessonsFilter,
 			set_options: function(options) { options.assignments = true; },
-			hover_tip: 'Filter items to show lessons taken in the last X hours.'
+			hover_tip: recentLessonsHoverTip
 		};
 	}
 
@@ -63,7 +119,7 @@
 			placeholder: 'Leech Ratio',
 			filter_func: leechesFilter,
 			set_options: function(options) { options.review_statistics = true; },
-			hover_tip: 'Only include leeches. Formula: incorrect / currentStreak^1.5.\n * Setting the value to 1 will include items that have just been answered incorrectly for the first time.\n * Setting the value to 1.01 will exclude items that have just been answered incorrectly for the first time.\n * The higher the value, the fewer items will be included as leeches.'
+			hover_tip: leechesHoverTip
 		};
 	}
 
