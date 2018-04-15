@@ -125,13 +125,13 @@
 			label: 'Leech Training',
 			default: 1,
 			placeholder: 'Leech Ratio',
-			filter_func: leechesFilter,
+			filter_func: leechTrainingFilter,
 			set_options: function(options) { options.review_statistics = true; },
 			hover_tip: leechesHoverTip
 		};
 	}
 
-	function leechesFilter(filterValue, item) {
+	function leechTrainingFilter(filterValue, item) {
 		if (item.review_statistics === undefined)
 			return false;
 
