@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name          WaniKani Open Framework Filter Pack
+// @name          WaniKani Open Framework Additional Filters
 // @namespace     https://www.wanikani.com
 // @description   Additional filters for the WaniKani Open Framework
 // @author        seanblue
@@ -29,7 +29,7 @@
 	var msToHoursDivisor = 3600000;
 
 	if (!window.wkof) {
-		alert('WaniKani Open Framework Filter Pack requires WaniKani Open Framework.\nYou will now be forwarded to installation instructions.');
+		alert('WaniKani Open Framework Additional Filters requires WaniKani Open Framework.\nYou will now be forwarded to installation instructions.');
 		window.location.href = 'https://community.wanikani.com/t/instructions-installing-wanikani-open-framework/28549';
 		return;
 	}
