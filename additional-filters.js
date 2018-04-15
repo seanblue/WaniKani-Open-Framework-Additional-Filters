@@ -15,12 +15,13 @@
 	var settingsScriptId = 'additionalFilters';
 	var settingsTitle = 'Additional Filters';
 
-	var recentLessonsSettingName = 'includeRecentLessonsFilter';
-	var leechesSettingName = 'includeLeechesFilter';
+	var filterNamePrefix = 'additionalFilters_';
+	var recentLessonsFilterName = filterNamePrefix + 'recentLessons';
+	var leechTrainingFilterName = filterNamePrefix + 'leechTraining';
 
 	var defaultSettings = {};
-	defaultSettings[recentLessonsSettingName] = true;
-	defaultSettings[leechesSettingName] = true;
+	defaultSettings[recentLessonsFilterName] = true;
+	defaultSettings[leechTrainingFilterName] = true;
 
 	var recentLessonsHoverTip = 'Filter items to show lessons taken in the last X hours.';
 	var leechesSummaryHoverTip = 'Only include leeches. Formula: incorrect / currentStreak^1.5.';
@@ -54,8 +55,8 @@
 
 	function installSettings() {
 		var settings = {};
-		settings[recentLessonsSettingName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
-		settings[leechesSettingName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
+		settings[recentLessonsFilterName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
+		settings[leechTrainingFilterName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
 
 		settingsDialog = new wkof.Settings({
 			script_id: settingsScriptId,
@@ -77,20 +78,20 @@
 	}
 
 	function registerFilters() {
-		if (wkof.settings[settingsScriptId][recentLessonsSettingName])
+		if (wkof.settings[settingsScriptId][recentLessonsFilterName])
 			registerRecentLessonsFilter();
 		else
 			deleteRecentLessonsFilter();
 
-		if (wkof.settings[settingsScriptId][leechesSettingName])
-			registerLeechesFilter();
+		if (wkof.settings[settingsScriptId][leechTrainingFilterName])
+			registerLeechTrainingFilter();
 		else
-			deleteLeechesFilter();
+			deleteLeechTrainingFilter();
 	}
 
 	// BEGIN Recent Lessons
 	function registerRecentLessonsFilter() {
-		wkof.ItemData.registry.sources.wk_items.filters.seanblue_recentLessons = {
+		wkof.ItemData.registry.sources.wk_items.filters[recentLessonsFilterName] = {
 			type: 'number',
 			label: 'Recent Lessons',
 			default: 24,
@@ -101,7 +102,7 @@
 	}
 
 	function deleteRecentLessonsFilter() {
-		delete wkof.ItemData.registry.sources.wk_items.filters.seanblue_recentLessons;
+		delete wkof.ItemData.registry.sources.wk_items.filters[recentLessonsFilterName];
 	}
 
 	function recentLessonsFilter(filterValue, item) {
@@ -120,8 +121,8 @@
 	// END Recent Lessons
 
 	// BEGIN Leeches
-	function registerLeechesFilter() {
-		wkof.ItemData.registry.sources.wk_items.filters.seanblue_leeches = {
+	function registerLeechTrainingFilter() {
+		wkof.ItemData.registry.sources.wk_items.filters[leechTrainingFilterName] = {
 			type: 'number',
 			label: 'Leech Training',
 			default: 1,
@@ -132,8 +133,8 @@
 		};
 	}
 
-	function deleteLeechesFilter() {
-		delete wkof.ItemData.registry.sources.wk_items.filters.seanblue_leeches;
+	function deleteLeechTrainingFilter() {
+		delete wkof.ItemData.registry.sources.wk_items.filters[leechTrainingFilterName];
 	}
 
 	function leechesFilter(filterValue, item) {
