@@ -37,8 +37,7 @@
 	wkof.include('Menu, Settings, ItemData');
 
 	wkof.ready('Menu').then(installMenu);
-	var settingsLoadedPromise = wkof.ready('Settings').then(installSettings);
-	Promise.all([settingsLoadedPromise, wkof.ready('ItemData')]).then(registerFilters);
+	wkof.ready('Settings').then(installSettings);
 
 	function installMenu() {
 		wkof.Menu.insert_script_link({
@@ -65,15 +64,15 @@
 			settings: settings
 		});
 
-		return settingsDialog.load().then(function() {
+		settingsDialog.load().then(function() {
 			wkof.settings[settingsScriptId] = $.extend(true, {}, defaultSettings, wkof.settings[settingsScriptId]);
-			settingsDialog.save();
+			saveSettings();
 		});
 	}
 
 	function saveSettings(){
 		settingsDialog.save().then(function() {
-			registerFilters();
+			wkof.ready('ItemData').then(registerFilters);
 		});
 	}
 
