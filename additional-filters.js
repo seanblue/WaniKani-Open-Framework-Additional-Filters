@@ -27,7 +27,7 @@
 
 	var recentLessonsHoverTip = 'Filter items to show lessons taken in the last X hours.';
 	var leechesSummaryHoverTip = 'Only include leeches. Formula: incorrect / currentStreak^1.5.';
-	var leechesHoverTip = leechesSummaryHoverTip + '\n * Setting the value to 1 will include items that have just been answered incorrectly for the first time.\n * Setting the value to 1.01 will exclude items that have just been answered incorrectly for the first time.\n * The higher the value, the fewer items will be included as leeches.';
+	var leechesHoverTip = leechesSummaryHoverTip + '\n * The higher the value, the fewer items will be included as leeches.\n * Setting the value to 1 will include items that have just been answered incorrectly for the first time.\n * Setting the value to 1.01 will exclude items that have just been answered incorrectly for the first time.';
 
 	var msToHoursDivisor = 3600000;
 
@@ -95,7 +95,7 @@
 	function registerRecentLessonsFilter() {
 		wkof.ItemData.registry.sources.wk_items.filters[recentLessonsFilterName] = {
 			type: 'number',
-			label: 'Recent Lessons',
+			label: 'Recent Lessons (hours)',
 			default: 24,
 			filter_func: recentLessonsFilter,
 			set_options: function(options) { options.assignments = true; },
@@ -124,7 +124,7 @@
 			type: 'number',
 			label: 'Leech Training',
 			default: 1,
-			placeholder: 'Leech Ratio',
+			placeholder: 'Leech Threshold',
 			filter_func: leechTrainingFilter,
 			set_options: function(options) { options.review_statistics = true; },
 			hover_tip: leechesHoverTip
