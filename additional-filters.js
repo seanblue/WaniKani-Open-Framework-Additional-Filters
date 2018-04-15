@@ -3,7 +3,7 @@
 // @namespace     https://www.wanikani.com
 // @description   Additional filters for the WaniKani Open Framework
 // @author        seanblue
-// @version       0.9.0
+// @version       1.0.0
 // @include       *://www.wanikani.com/*
 // @grant         none
 // ==/UserScript==
