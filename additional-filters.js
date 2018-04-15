@@ -19,6 +19,8 @@
 	var recentLessonsFilterName = filterNamePrefix + 'recentLessons';
 	var leechTrainingFilterName = filterNamePrefix + 'leechTraining';
 
+	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName];
+
 	var defaultSettings = {};
 	defaultSettings[recentLessonsFilterName] = true;
 	defaultSettings[leechTrainingFilterName] = true;
@@ -78,15 +80,15 @@
 	}
 
 	function registerFilters() {
+		supportedFilters.forEach(function(filterName) {
+			delete wkof.ItemData.registry.sources.wk_items.filters[filterName];
+		});
+
 		if (wkof.settings[settingsScriptId][recentLessonsFilterName])
 			registerRecentLessonsFilter();
-		else
-			deleteRecentLessonsFilter();
 
 		if (wkof.settings[settingsScriptId][leechTrainingFilterName])
 			registerLeechTrainingFilter();
-		else
-			deleteLeechTrainingFilter();
 	}
 
 	// BEGIN Recent Lessons
@@ -99,10 +101,6 @@
 			set_options: function(options) { options.assignments = true; },
 			hover_tip: recentLessonsHoverTip
 		};
-	}
-
-	function deleteRecentLessonsFilter() {
-		delete wkof.ItemData.registry.sources.wk_items.filters[recentLessonsFilterName];
 	}
 
 	function recentLessonsFilter(filterValue, item) {
@@ -131,10 +129,6 @@
 			set_options: function(options) { options.review_statistics = true; },
 			hover_tip: leechesHoverTip
 		};
-	}
-
-	function deleteLeechTrainingFilter() {
-		delete wkof.ItemData.registry.sources.wk_items.filters[leechTrainingFilterName];
 	}
 
 	function leechesFilter(filterValue, item) {
