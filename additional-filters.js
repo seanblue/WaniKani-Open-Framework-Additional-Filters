@@ -67,16 +67,19 @@
 			settings: settings
 		});
 
-		settingsDialog.load().then(function() {
-			wkof.settings[settingsScriptId] = $.extend(true, {}, defaultSettings, wkof.settings[settingsScriptId]);
-			saveSettings();
+		settingsDialog.load(defaultSettings).then(function() {
+			updateFiltersWhenReady();
 		});
 	}
 
 	function saveSettings(){
 		settingsDialog.save().then(function() {
-			wkof.ready('ItemData').then(registerFilters);
+			updateFiltersWhenReady();
 		});
+	}
+
+	function updateFiltersWhenReady() {
+		wkof.ready('ItemData').then(registerFilters);
 	}
 
 	function registerFilters() {
