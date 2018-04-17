@@ -42,12 +42,14 @@
 	wkof.ready('Menu').then(installMenu);
 	waitForItemDataRegistry().then(installSettings);
 
+	function promise(){var a,b,c=new Promise(function(d,e){a=d;b=e;});c.resolve=a;c.reject=b;return c;}
+
 	function waitForItemDataRegistry() {
 		return wkof.wait_state('wkof.ItemData.registry', 'ready');
 	}
 
 	function installMenu() {
-		loadSettingsWhenReady(function() {
+		loadSettings().then(function() {
 			addMenuItem();
 		});
 	}
@@ -63,11 +65,21 @@
 
 	function installSettings() {
 		wkof.ItemData.pause_ready_event(true);
-		loadSettingsWhenReady(function() { wkof.ItemData.pause_ready_event(false); });
+
+		loadSettings().then(function() {
+			wkof.ItemData.pause_ready_event(false);
+		});
 	}
 
-	function loadSettingsWhenReady(postLoadAction) {
-		return wkof.ready('Settings').then(function() {
+	function loadSettings(postLoadAction) {
+		var settingsLoadedPromise = promise();
+
+		wkof.ready('Settings').then(function() {
+			if (settingsDialog) {
+				settingsLoadedPromise.resolve();
+				return;
+			}
+
 			var settings = {};
 			settings[recentLessonsFilterName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
 			settings[leechTrainingFilterName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
@@ -81,9 +93,11 @@
 
 			settingsDialog.load(defaultSettings).then(function() {
 				updateFiltersWhenReady();
-				postLoadAction();
+				settingsLoadedPromise.resolve();
 			});
 		});
+
+		return settingsLoadedPromise;
 	}
 
 	function saveSettings(){
