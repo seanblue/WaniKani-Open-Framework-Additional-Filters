@@ -4,7 +4,7 @@
 // @description   Additional filters for the WaniKani Open Framework
 // @author        seanblue
 // @version       1.0.1
-// @include       *://www.wanikani.com/*
+// @include       https://www.wanikani.com/*
 // @grant         none
 // ==/UserScript==
 
