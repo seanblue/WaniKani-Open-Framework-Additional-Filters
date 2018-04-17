@@ -37,38 +37,52 @@
 		return;
 	}
 
-	wkof.include('Menu, Settings, ItemData');
+	wkof.include('Menu, Settings');
 
 	wkof.ready('Menu').then(installMenu);
-	wkof.ready('Settings').then(installSettings);
+	waitForItemDataRegistry().then(installSettings);
+
+	function waitForItemDataRegistry() {
+		return wkof.wait_state('wkof.ItemData.registry', 'ready');
+	}
 
 	function installMenu() {
+		loadSettingsWhenReady(function() {
+			addMenuItem();
+		});
+	}
+
+	function addMenuItem() {
 		wkof.Menu.insert_script_link({
 			script_id: settingsScriptId,
 			submenu: 'Settings',
 			title: settingsTitle,
-			on_click: openSettings
+			on_click: function() { settingsDialog.open(); }
 		});
-	}
-
-	function openSettings() {
-		settingsDialog.open();
 	}
 
 	function installSettings() {
-		var settings = {};
-		settings[recentLessonsFilterName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
-		settings[leechTrainingFilterName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
+		wkof.ItemData.pause_ready_event(true);
+		loadSettingsWhenReady(function() { wkof.ItemData.pause_ready_event(false); });
+	}
 
-		settingsDialog = new wkof.Settings({
-			script_id: settingsScriptId,
-			title: settingsTitle,
-			on_save: saveSettings,
-			settings: settings
-		});
+	function loadSettingsWhenReady(postLoadAction) {
+		return wkof.ready('Settings').then(function() {
+			var settings = {};
+			settings[recentLessonsFilterName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
+			settings[leechTrainingFilterName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
 
-		settingsDialog.load(defaultSettings).then(function() {
-			updateFiltersWhenReady();
+			settingsDialog = new wkof.Settings({
+				script_id: settingsScriptId,
+				title: settingsTitle,
+				on_save: saveSettings,
+				settings: settings
+			});
+
+			settingsDialog.load(defaultSettings).then(function() {
+				updateFiltersWhenReady();
+				postLoadAction();
+			});
 		});
 	}
 
@@ -79,7 +93,7 @@
 	}
 
 	function updateFiltersWhenReady() {
-		wkof.ready('ItemData').then(registerFilters);
+		waitForItemDataRegistry().then(registerFilters);
 	}
 
 	function registerFilters() {
