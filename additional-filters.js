@@ -21,6 +21,7 @@
 
 	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName];
 	var needToRegisterFilters = true;
+	var settingsLoadedPromise = promise();
 
 	var defaultSettings = {};
 	defaultSettings[recentLessonsFilterName] = true;
@@ -73,11 +74,8 @@
 	}
 
 	function loadSettings(postLoadAction) {
-		var settingsLoadedPromise = promise();
-
 		wkof.ready('Settings').then(function() {
 			if (settingsDialog) {
-				settingsLoadedPromise.resolve();
 				return;
 			}
 
