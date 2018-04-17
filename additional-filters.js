@@ -11,6 +11,19 @@
 (function() {
 	'use strict';
 
+	var wkofMinimumVersion = '1.0.18';
+
+	if (!window.wkof) {
+		alert('WaniKani Open Framework Additional Filters requires WaniKani Open Framework.\nYou will now be forwarded to installation instructions.');
+		window.location.href = 'https://community.wanikani.com/t/instructions-installing-wanikani-open-framework/28549';
+		return;
+	}
+
+	if (!wkof.version || wkof.version.compare_to(wkofMinimumVersion) === 'older') {
+		alert('WaniKani Open Framework Additional Filters requires at least version ' + wkofMinimumVersion + ' of WaniKani Open Framework.');
+		return;
+	}
+
 	var settingsDialog;
 	var settingsScriptId = 'additionalFilters';
 	var settingsTitle = 'Additional Filters';
@@ -32,12 +45,6 @@
 	var leechesHoverTip = leechesSummaryHoverTip + '\n * The higher the value, the fewer items will be included as leeches.\n * Setting the value to 1 will include items that have just been answered incorrectly for the first time.\n * Setting the value to 1.01 will exclude items that have just been answered incorrectly for the first time.';
 
 	var msToHoursDivisor = 3600000;
-
-	if (!window.wkof) {
-		alert('WaniKani Open Framework Additional Filters requires WaniKani Open Framework.\nYou will now be forwarded to installation instructions.');
-		window.location.href = 'https://community.wanikani.com/t/instructions-installing-wanikani-open-framework/28549';
-		return;
-	}
 
 	wkof.include('Menu, Settings');
 
