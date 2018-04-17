@@ -28,23 +28,34 @@
 	var settingsScriptId = 'additionalFilters';
 	var settingsTitle = 'Additional Filters';
 
+	var needToRegisterFilters = true;
+	var settingsLoadedPromise = promise();
+
 	var filterNamePrefix = 'additionalFilters_';
 	var recentLessonsFilterName = filterNamePrefix + 'recentLessons';
 	var leechTrainingFilterName = filterNamePrefix + 'leechTraining';
+	var timeUntilReviewFilterName = filterNamePrefix + 'timeUntilReview';
 
-	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName];
-	var needToRegisterFilters = true;
-	var settingsLoadedPromise = promise();
+	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName, timeUntilReviewFilterName];
 
 	var defaultSettings = {};
 	defaultSettings[recentLessonsFilterName] = true;
 	defaultSettings[leechTrainingFilterName] = true;
+	defaultSettings[timeUntilReviewFilterName] = true;
 
 	var recentLessonsHoverTip = 'Filter items to show lessons taken in the last X hours.';
 	var leechesSummaryHoverTip = 'Only include leeches. Formula: incorrect / currentStreak^1.5.';
 	var leechesHoverTip = leechesSummaryHoverTip + '\n * The higher the value, the fewer items will be included as leeches.\n * Setting the value to 1 will include items that have just been answered incorrectly for the first time.\n * Setting the value to 1.01 will exclude items that have just been answered incorrectly for the first time.';
 
+	var timeUntilReviewSummaryHoverTip = 'Only include items that have at least X% of their SRS interval remaining.';
+	var timeUntilReviewHoverTip = timeUntilReviewSummaryHoverTip + ' Valid values are from 0 to 100. Examples:\n "75": At least 75% of an item\'s SRS interval must be remaining.';
+
 	var msToHoursDivisor = 3600000;
+
+	var nowForTimeUntilReview;
+	var regularSrsIntervals = [0, 4, 8, 23, 47, 167, 335, 719, 2879];
+	var acceleratedSrsIntervals = [0, 2, 4, 8, 23, 167, 335, 719, 2879];
+	var acceleratedLevels = [1, 2];
 
 	wkof.include('Menu, Settings');
 
@@ -89,6 +100,7 @@
 			var settings = {};
 			settings[recentLessonsFilterName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
 			settings[leechTrainingFilterName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
+			settings[timeUntilReviewFilterName] = { type: 'checkbox', label: 'Time Until Review', hover_tip: timeUntilReviewSummaryHoverTip };
 
 			settingsDialog = new wkof.Settings({
 				script_id: settingsScriptId,
@@ -130,6 +142,9 @@
 
 		if (wkof.settings[settingsScriptId][leechTrainingFilterName])
 			registerLeechTrainingFilter();
+
+		if (wkof.settings[settingsScriptId][timeUntilReviewFilterName])
+			registerTimeUntilReviewFilter();
 
 		needToRegisterFilters = false;
 	}
@@ -189,4 +204,61 @@
 		return incorrect / Math.pow((currentStreak || 0.5), 1.5);
 	}
 	// END Leeches
+
+	// BEGIN Time Until Review
+	function registerTimeUntilReviewFilter() {
+		wkof.ItemData.registry.sources.wk_items.filters[timeUntilReviewFilterName] = {
+			type: 'number',
+			label: 'Time Until Review',
+			default: 50,
+			placeholder: '50',
+			prepare: timeUntilReviewPrepare,
+			filter_value_map: timeUntilReviewValueMap,
+			filter_func: timeUntilReviewFilter,
+			set_options: function(options) { options.assignments = true; },
+			hover_tip: timeUntilReviewHoverTip
+		};
+	}
+
+	function timeUntilReviewPrepare() {
+		// Only set "now" once so that all items use the same value when filtering.
+		nowForTimeUntilReview = Date.now();
+	}
+
+	function timeUntilReviewValueMap(percentage) {
+		if (percentage < 0)
+			return 0;
+
+		if (percentage > 100)
+			return 100;
+
+		return percentage;
+	}
+
+	function timeUntilReviewFilter(percentage, item) {
+		if (item.assignments === undefined)
+			return false;
+
+		var srsStage = item.assignments.srs_stage;
+		if (srsStage === 0)
+			return false;
+
+		if (srsStage === 9)
+			return true;
+
+		var level = item.assignments.level;
+		var reviewAvailableAt = item.assignments.available_at;
+		return isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, percentage);
+	}
+
+	function isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, percentage) {
+		var hoursUntilReview = (new Date(reviewAvailableAt).getTime() - nowForTimeUntilReview) / msToHoursDivisor;
+
+		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
+		var minimumHoursUntilReview =  srsInvervals[srsStage] * percentage / 100;
+
+		return minimumHoursUntilReview <= hoursUntilReview;
+	}
+	// END Time Until Review
+
 })();
