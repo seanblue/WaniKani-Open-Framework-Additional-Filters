@@ -20,6 +20,7 @@
 	var leechTrainingFilterName = filterNamePrefix + 'leechTraining';
 
 	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName];
+	var needToRegisterFilters = true;
 
 	var defaultSettings = {};
 	defaultSettings[recentLessonsFilterName] = true;
@@ -107,10 +108,14 @@
 	}
 
 	function updateFiltersWhenReady() {
+		needToRegisterFilters = true;
 		waitForItemDataRegistry().then(registerFilters);
 	}
 
 	function registerFilters() {
+		if (!needToRegisterFilters)
+			return;
+
 		supportedFilters.forEach(function(filterName) {
 			delete wkof.ItemData.registry.sources.wk_items.filters[filterName];
 		});
@@ -120,6 +125,8 @@
 
 		if (wkof.settings[settingsScriptId][leechTrainingFilterName])
 			registerLeechTrainingFilter();
+
+		needToRegisterFilters = false;
 	}
 
 	// BEGIN Recent Lessons
