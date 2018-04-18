@@ -214,7 +214,7 @@
 			default: 50,
 			placeholder: '50',
 			prepare: timeUntilReviewPrepare,
-			filter_value_map: timeUntilReviewValueMap,
+			filter_value_map: convertPercentageToDecimal,
 			filter_func: timeUntilReviewFilter,
 			set_options: function(options) { options.assignments = true; },
 			hover_tip: timeUntilReviewHoverTip
@@ -226,17 +226,17 @@
 		nowForTimeUntilReview = Date.now();
 	}
 
-	function timeUntilReviewValueMap(percentage) {
+	function convertPercentageToDecimal(percentage) {
 		if (percentage < 0)
 			return 0;
 
 		if (percentage > 100)
-			return 100;
+			return 1;
 
-		return percentage;
+		return percentage / 100;
 	}
 
-	function timeUntilReviewFilter(percentage, item) {
+	function timeUntilReviewFilter(decimal, item) {
 		if (item.assignments === undefined)
 			return false;
 
@@ -249,14 +249,14 @@
 
 		var level = item.assignments.level;
 		var reviewAvailableAt = item.assignments.available_at;
-		return isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, percentage);
+		return isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, decimal);
 	}
 
-	function isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, percentage) {
+	function isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, decimal) {
 		var hoursUntilReview = (new Date(reviewAvailableAt).getTime() - nowForTimeUntilReview) / msToHoursDivisor;
 
 		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
-		var minimumHoursUntilReview =  srsInvervals[srsStage] * percentage / 100;
+		var minimumHoursUntilReview =  srsInvervals[srsStage] * decimal;
 
 		return minimumHoursUntilReview <= hoursUntilReview;
 	}
