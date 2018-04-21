@@ -35,13 +35,15 @@
 	var recentLessonsFilterName = filterNamePrefix + 'recentLessons';
 	var leechTrainingFilterName = filterNamePrefix + 'leechTraining';
 	var timeUntilReviewFilterName = filterNamePrefix + 'timeUntilReview';
+	var failedLastReviewName = filterNamePrefix + 'failedLastReview';
 
-	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName, timeUntilReviewFilterName];
+	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName, timeUntilReviewFilterName, failedLastReviewName];
 
 	var defaultSettings = {};
 	defaultSettings[recentLessonsFilterName] = true;
 	defaultSettings[leechTrainingFilterName] = true;
 	defaultSettings[timeUntilReviewFilterName] = true;
+	defaultSettings[failedLastReviewName] = true;
 
 	var recentLessonsHoverTip = 'Only include lessons taken in the last X hours.';
 	var leechesSummaryHoverTip = 'Only include leeches. Formula: incorrect / currentStreak^1.5.';
@@ -50,9 +52,13 @@
 	var timeUntilReviewSummaryHoverTip = 'Only include items that have at least X% of their SRS interval remaining.';
 	var timeUntilReviewHoverTip = timeUntilReviewSummaryHoverTip + '\nValid values are from 0 to 100. Examples:\n "75": At least 75% of an item\'s SRS interval must be remaining.';
 
+	var failedLastReviewSummaryHoverTip = 'Only include items where the most recent review was failed.';
+	var failedLastReviewHoverTip = failedLastReviewSummaryHoverTip + '\nOnly look at items whose most recent review was in the last X hours.';
+
 	var msToHoursDivisor = 3600000;
 
 	var nowForTimeUntilReview;
+	var nowForFailedLastReview;
 	var regularSrsIntervals = [0, 4, 8, 23, 47, 167, 335, 719, 2879];
 	var acceleratedSrsIntervals = [0, 2, 4, 8, 23, 167, 335, 719, 2879];
 	var acceleratedLevels = [1, 2];
@@ -101,6 +107,7 @@
 			settings[recentLessonsFilterName] = { type: 'checkbox', label: 'Recent Lessons', hover_tip: recentLessonsHoverTip };
 			settings[leechTrainingFilterName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
 			settings[timeUntilReviewFilterName] = { type: 'checkbox', label: 'Time Until Review', hover_tip: timeUntilReviewSummaryHoverTip };
+			settings[failedLastReviewName] = { type: 'checkbox', label: 'Failed Last Review', hover_tip: failedLastReviewSummaryHoverTip };
 
 			settingsDialog = new wkof.Settings({
 				script_id: settingsScriptId,
@@ -145,6 +152,9 @@
 
 		if (wkof.settings[settingsScriptId][timeUntilReviewFilterName])
 			registerTimeUntilReviewFilter();
+
+		if (wkof.settings[settingsScriptId][failedLastReviewName])
+			registerFailedLastReviewFilter();
 
 		needToRegisterFilters = false;
 	}
@@ -262,4 +272,54 @@
 	}
 	// END Time Until Review
 
+	// BEGIN Failed Last Review
+	function registerFailedLastReviewFilter() {
+		wkof.ItemData.registry.sources.wk_items.filters[failedLastReviewName] = {
+			type: 'number',
+			label: 'Failed Last Review',
+			default: 24,
+			placeholder: '24',
+			prepare: failedLastReviewPrepare,
+			filter_func: failedLastReviewFilter,
+			set_options: function(options) { options.review_statistics = true; options.assignments = true; },
+			hover_tip: failedLastReviewHoverTip
+		};
+	}
+
+	function failedLastReviewPrepare() {
+		// Only set "now" once so that all items use the same value when filtering.
+		nowForFailedLastReview = Date.now();
+	}
+
+	function failedLastReviewFilter(filterValue, item) {
+		// New lessons have undefined for review_statistics.
+		if (item.assignments === undefined || item.review_statistics === undefined)
+			return false;
+
+		var level = item.assignments.level;
+		var srsStage = item.assignments.srs_stage;
+		var meaningStreak = item.review_statistics.meaning_current_streak;
+		var readingStreak = item.review_statistics.reading_current_streak;
+		var reviewAvailableAt = item.assignments.available_at;
+
+		if (srsStage === 0)
+			return false;
+
+		if (srsStage === 9)
+			return false;
+
+		if (meaningStreak > 1 && readingStreak > 1)
+			return false;
+
+		var lastReview = getLastReviewDate(srsStage, level, reviewAvailableAt);
+		var daysSinceLastReview = (nowForFailedLastReview - lastReview.getTime()) / msToHoursDivisor;
+		return daysSinceLastReview <= filterValue;
+	}
+
+	function getLastReviewDate(srsStage, level, reviewAvailableAt) {
+		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
+		return new Date(new Date(reviewAvailableAt).getTime() - (srsInvervals[srsStage] * msToHoursDivisor));
+	}
+
+	// END Failed Last Review
 })();
