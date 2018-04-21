@@ -292,7 +292,7 @@
 	}
 
 	function failedLastReviewFilter(filterValue, item) {
-		// New lessons have undefined for review_statistics.
+		// review_statistics is undefined for new lessons.
 		if (item.assignments === undefined || item.review_statistics === undefined)
 			return false;
 
@@ -311,14 +311,16 @@
 		if (meaningStreak > 1 && readingStreak > 1)
 			return false;
 
-		var lastReview = getLastReviewDate(srsStage, level, reviewAvailableAt);
-		var daysSinceLastReview = (nowForFailedLastReview - lastReview.getTime()) / msToHoursDivisor;
+		var lastReviewTimeInMs = getLastReviewTimeInMs(srsStage, level, reviewAvailableAt);
+		var daysSinceLastReview = (nowForFailedLastReview - lastReviewTimeInMs) / msToHoursDivisor;
 		return daysSinceLastReview <= filterValue;
 	}
 
-	function getLastReviewDate(srsStage, level, reviewAvailableAt) {
+	function getLastReviewTimeInMs(srsStage, level, reviewAvailableAt) {
 		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
-		return new Date(new Date(reviewAvailableAt).getTime() - (srsInvervals[srsStage] * msToHoursDivisor));
+		var srsIntervalInMs = (srsInvervals[srsStage] * msToHoursDivisor);
+
+		return Date.parse(reviewAvailableAt) - srsIntervalInMs;
 	}
 
 	// END Failed Last Review
