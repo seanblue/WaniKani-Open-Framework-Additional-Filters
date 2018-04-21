@@ -63,12 +63,17 @@
 	var acceleratedSrsIntervals = [0, 2, 4, 8, 23, 167, 335, 719, 2879];
 	var acceleratedLevels = [1, 2];
 
+	function promise(){var a,b,c=new Promise(function(d,e){a=d;b=e;});c.resolve=a;c.reject=b;return c;}
+
+	function getSrsIntervalInHours(srsStage, level) {
+		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
+		return srsInvervals[srsStage];
+	}
+
 	wkof.include('Menu, Settings');
 
 	wkof.ready('Menu').then(installMenu);
 	waitForItemDataRegistry().then(installSettings);
-
-	function promise(){var a,b,c=new Promise(function(d,e){a=d;b=e;});c.resolve=a;c.reject=b;return c;}
 
 	function waitForItemDataRegistry() {
 		return wkof.wait_state('wkof.ItemData.registry', 'ready');
@@ -259,14 +264,14 @@
 
 		var level = item.assignments.level;
 		var reviewAvailableAt = item.assignments.available_at;
-		return isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, decimal);
+		var srsInvervalInHours = getSrsIntervalInHours(srsStage, level);
+
+		return isAtLeastMinimumHoursUntilReview(srsInvervalInHours, reviewAvailableAt, decimal);
 	}
 
-	function isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, decimal) {
+	function isAtLeastMinimumHoursUntilReview(srsInvervalInHours, reviewAvailableAt, decimal) {
 		var hoursUntilReview = (Date.parse(reviewAvailableAt) - nowForTimeUntilReview) / msPerHour;
-
-		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
-		var minimumHoursUntilReview =  srsInvervals[srsStage] * decimal;
+		var minimumHoursUntilReview =  srsInvervalInHours * decimal;
 
 		return minimumHoursUntilReview <= hoursUntilReview;
 	}
@@ -311,17 +316,17 @@
 		if (meaningStreak > 1 && readingStreak > 1)
 			return false;
 
-		var lastReviewTimeInMs = getLastReviewTimeInMs(srsStage, level, reviewAvailableAt);
-		var daysSinceLastReview = (nowForFailedLastReview - lastReviewTimeInMs) / msPerHour;
-		return daysSinceLastReview <= filterValue;
+		var srsInvervalInHours = getSrsIntervalInHours(srsStage, level);
+		var lastReviewTimeInMs = getLastReviewTimeInMs(srsInvervalInHours, reviewAvailableAt);
+		var hoursSinceLastReview = (nowForFailedLastReview - lastReviewTimeInMs) / msPerHour;
+
+		return hoursSinceLastReview <= filterValue;
 	}
 
-	function getLastReviewTimeInMs(srsStage, level, reviewAvailableAt) {
-		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
-		var srsIntervalInMs = (srsInvervals[srsStage] * msPerHour);
+	function getLastReviewTimeInMs(srsInvervalInHours, reviewAvailableAt) {
+		var srsIntervalInMs = srsInvervalInHours * msPerHour;
 
 		return Date.parse(reviewAvailableAt) - srsIntervalInMs;
 	}
-
 	// END Failed Last Review
 })();
