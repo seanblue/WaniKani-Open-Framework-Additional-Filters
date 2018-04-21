@@ -301,11 +301,8 @@
 		if (item.assignments === undefined || item.review_statistics === undefined)
 			return false;
 
-		var level = item.assignments.level;
-		var srsStage = item.assignments.srs_stage;
-		var meaningStreak = item.review_statistics.meaning_current_streak;
-		var readingStreak = item.review_statistics.reading_current_streak;
-		var reviewAvailableAt = item.assignments.available_at;
+		var assignments = item.assignments;
+		var srsStage = assignments.srs_stage;
 
 		if (srsStage === 0)
 			return false;
@@ -313,14 +310,22 @@
 		if (srsStage === 9)
 			return false;
 
-		if (meaningStreak > 1 && readingStreak > 1)
+		if (!failedLastReview(item.review_statistics))
 			return false;
 
-		var srsInvervalInHours = getSrsIntervalInHours(srsStage, level);
-		var lastReviewTimeInMs = getLastReviewTimeInMs(srsInvervalInHours, reviewAvailableAt);
+		var srsInvervalInHours = getSrsIntervalInHours(srsStage, assignments.level);
+		var lastReviewTimeInMs = getLastReviewTimeInMs(srsInvervalInHours, assignments.available_at);
 		var hoursSinceLastReview = (nowForFailedLastReview - lastReviewTimeInMs) / msPerHour;
 
 		return hoursSinceLastReview <= filterValue;
+	}
+
+	function failedLastReview(reviewStats) {
+		return failedLastReviewOfType(reviewStats.meaning_incorrect, reviewStats.meaning_current_streak) || failedLastReviewOfType(reviewStats.reading_incorrect, reviewStats.reading_current_streak);
+	}
+
+	function failedLastReviewOfType(totalIncorrect, currentStreak) {
+		return totalIncorrect > 0 && currentStreak === 1;
 	}
 
 	function getLastReviewTimeInMs(srsInvervalInHours, reviewAvailableAt) {
