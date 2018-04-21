@@ -263,7 +263,7 @@
 	}
 
 	function isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, decimal) {
-		var hoursUntilReview = (new Date(reviewAvailableAt).getTime() - nowForTimeUntilReview) / msPerHour;
+		var hoursUntilReview = (Date.parse(reviewAvailableAt) - nowForTimeUntilReview) / msPerHour;
 
 		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
 		var minimumHoursUntilReview =  srsInvervals[srsStage] * decimal;
