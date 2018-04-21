@@ -55,7 +55,7 @@
 	var failedLastReviewSummaryHoverTip = 'Only include items where the most recent review was failed.';
 	var failedLastReviewHoverTip = failedLastReviewSummaryHoverTip + '\nOnly look at items whose most recent review was in the last X hours.';
 
-	var msToHoursDivisor = 3600000;
+	var msPerHour = 3600000;
 
 	var nowForTimeUntilReview;
 	var nowForFailedLastReview;
@@ -183,7 +183,7 @@
 		var startedAtDate = new Date(startedAt);
 		var timeSinceStart = Date.now() - startedAtDate;
 
-		return (timeSinceStart / msToHoursDivisor) < filterValue;
+		return (timeSinceStart / msPerHour) < filterValue;
 	}
 	// END Recent Lessons
 
@@ -263,7 +263,7 @@
 	}
 
 	function isAtLeastMinimumHoursUntilReview(srsStage, level, reviewAvailableAt, decimal) {
-		var hoursUntilReview = (new Date(reviewAvailableAt).getTime() - nowForTimeUntilReview) / msToHoursDivisor;
+		var hoursUntilReview = (new Date(reviewAvailableAt).getTime() - nowForTimeUntilReview) / msPerHour;
 
 		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
 		var minimumHoursUntilReview =  srsInvervals[srsStage] * decimal;
@@ -312,13 +312,13 @@
 			return false;
 
 		var lastReviewTimeInMs = getLastReviewTimeInMs(srsStage, level, reviewAvailableAt);
-		var daysSinceLastReview = (nowForFailedLastReview - lastReviewTimeInMs) / msToHoursDivisor;
+		var daysSinceLastReview = (nowForFailedLastReview - lastReviewTimeInMs) / msPerHour;
 		return daysSinceLastReview <= filterValue;
 	}
 
 	function getLastReviewTimeInMs(srsStage, level, reviewAvailableAt) {
 		var srsInvervals = acceleratedLevels.includes(level) ? acceleratedSrsIntervals : regularSrsIntervals;
-		var srsIntervalInMs = (srsInvervals[srsStage] * msToHoursDivisor);
+		var srsIntervalInMs = (srsInvervals[srsStage] * msPerHour);
 
 		return Date.parse(reviewAvailableAt) - srsIntervalInMs;
 	}
