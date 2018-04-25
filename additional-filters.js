@@ -384,11 +384,12 @@
 	}
 
 	function relatedItemsFilter(filterValue, item) {
-		if (item.object === 'radical') {
+		var characters = item.data.characters;
+		if (characters === null || characters === undefined) {
 			return false;
 		}
 
-		var itemCharacterArray = item.data.characters.split('');
+		var itemCharacterArray = characters.split('');
 
 		return containsAny(filterValue.include, itemCharacterArray) && !containsAny(filterValue.exclude, itemCharacterArray);
 	}
