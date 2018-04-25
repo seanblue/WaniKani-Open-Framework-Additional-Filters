@@ -36,14 +36,16 @@
 	var leechTrainingFilterName = filterNamePrefix + 'leechTraining';
 	var timeUntilReviewFilterName = filterNamePrefix + 'timeUntilReview';
 	var failedLastReviewName = filterNamePrefix + 'failedLastReview';
+	var relatedItemsName = filterNamePrefix + 'relatedItems';
 
-	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName, timeUntilReviewFilterName, failedLastReviewName];
+	var supportedFilters = [recentLessonsFilterName, leechTrainingFilterName, timeUntilReviewFilterName, failedLastReviewName, relatedItemsName];
 
 	var defaultSettings = {};
 	defaultSettings[recentLessonsFilterName] = true;
 	defaultSettings[leechTrainingFilterName] = true;
 	defaultSettings[timeUntilReviewFilterName] = true;
 	defaultSettings[failedLastReviewName] = true;
+	defaultSettings[relatedItemsName] = true;
 
 	var recentLessonsHoverTip = 'Only include lessons taken in the last X hours.';
 	var leechesSummaryHoverTip = 'Only include leeches. Formula: incorrect / currentStreak^1.5.';
@@ -54,6 +56,9 @@
 
 	var failedLastReviewSummaryHoverTip = 'Only include items where the most recent review was failed.';
 	var failedLastReviewHoverTip = failedLastReviewSummaryHoverTip + '\nOnly look at items whose most recent review was in the last X hours.';
+
+	var relatedItemsSummaryHoverTip = 'Only include items that contain at least one of the given kanji.';
+	var relatedItemsHoverTip = relatedItemsSummaryHoverTip + ' Examples:\n "金": All items containing the kanji 金.\n "金髪 -曜": All items containing the kanji 金 or 髪, but not 曜.';
 
 	var msPerHour = 3600000;
 
@@ -113,6 +118,7 @@
 			settings[leechTrainingFilterName] = { type: 'checkbox', label: 'Leech Training', hover_tip: leechesSummaryHoverTip };
 			settings[timeUntilReviewFilterName] = { type: 'checkbox', label: 'Time Until Review', hover_tip: timeUntilReviewSummaryHoverTip };
 			settings[failedLastReviewName] = { type: 'checkbox', label: 'Failed Last Review', hover_tip: failedLastReviewSummaryHoverTip };
+			settings[relatedItemsName] = { type: 'checkbox', label: 'Related Items', hover_tip: relatedItemsSummaryHoverTip };
 
 			settingsDialog = new wkof.Settings({
 				script_id: settingsScriptId,
@@ -160,6 +166,9 @@
 
 		if (wkof.settings[settingsScriptId][failedLastReviewName])
 			registerFailedLastReviewFilter();
+
+		if (wkof.settings[settingsScriptId][relatedItemsName])
+			registerRelatedItemsFilter();
 
 		needToRegisterFilters = false;
 	}
@@ -334,4 +343,60 @@
 		return Date.parse(reviewAvailableAt) - srsIntervalInMs;
 	}
 	// END Failed Last Review
+
+	// BEGIN Related Items
+	function registerRelatedItemsFilter() {
+		wkof.ItemData.registry.sources.wk_items.filters[relatedItemsName] = {
+				type: 'text',
+				label: 'Related Items',
+				default: '',
+				placeholder: '入力',
+				filter_value_map: relatedItemsMap,
+				filter_func: relatedItemsFilter,
+				hover_tip: relatedItemsHoverTip
+			};
+	}
+
+	function relatedItemsMap(kanjiString) {
+		var parts = kanjiString.split(' ');
+
+		var includeList = [];
+		var excludeList = [];
+
+		for (var i = 0; i < parts.length; i++) {
+			var part = parts[i];
+			if (part.startsWith('-')) {
+				concat(excludeList, part.substr(1).split(''));
+			}
+			else {
+				concat(includeList, part.split(''));
+			}
+		}
+
+		return {
+			include: includeList,
+			exclude: excludeList
+		};
+	}
+
+	function concat(array1, array2) {
+		Array.prototype.push.apply(array1, array2);
+	}
+
+	function relatedItemsFilter(filterValue, item) {
+		if (item.object === 'radical') {
+			return false;
+		}
+
+		var itemCharacterArray = item.data.characters.split('');
+
+		return containsAny(filterValue.include, itemCharacterArray) && !containsAny(filterValue.exclude, itemCharacterArray);
+	}
+
+	function containsAny(filterValueArray, itemCharacterArray) {
+		return itemCharacterArray.some(function(itemCharacter) {
+			return filterValueArray.includes(itemCharacter);
+		});
+	}
+	// END Related Items
 })();
