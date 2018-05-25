@@ -14,8 +14,12 @@
 	var wkofMinimumVersion = '1.0.18';
 
 	if (!window.wkof) {
-		alert('WaniKani Open Framework Additional Filters requires WaniKani Open Framework.\nYou will now be forwarded to installation instructions.');
-		window.location.href = 'https://community.wanikani.com/t/instructions-installing-wanikani-open-framework/28549';
+		var response = confirm('WaniKani Open Framework Additional Filters requires WaniKani Open Framework.\n Click "OK" to be forwarded to installation instructions.');
+
+		if (response) {
+			window.location.href = 'https://community.wanikani.com/t/instructions-installing-wanikani-open-framework/28549';
+		}
+
 		return;
 	}
 
@@ -280,7 +284,7 @@
 
 	function isAtLeastMinimumHoursUntilReview(srsInvervalInHours, reviewAvailableAt, decimal) {
 		var hoursUntilReview = (Date.parse(reviewAvailableAt) - nowForTimeUntilReview) / msPerHour;
-		var minimumHoursUntilReview =  srsInvervalInHours * decimal;
+		var minimumHoursUntilReview = srsInvervalInHours * decimal;
 
 		return minimumHoursUntilReview <= hoursUntilReview;
 	}
@@ -347,14 +351,14 @@
 	// BEGIN Related Items
 	function registerRelatedItemsFilter() {
 		wkof.ItemData.registry.sources.wk_items.filters[relatedItemsName] = {
-				type: 'text',
-				label: 'Related Items',
-				default: '',
-				placeholder: '入力',
-				filter_value_map: relatedItemsMap,
-				filter_func: relatedItemsFilter,
-				hover_tip: relatedItemsHoverTip
-			};
+			type: 'text',
+			label: 'Related Items',
+			default: '',
+			placeholder: '入力',
+			filter_value_map: relatedItemsMap,
+			filter_func: relatedItemsFilter,
+			hover_tip: relatedItemsHoverTip
+		};
 	}
 
 	function relatedItemsMap(kanjiString) {
