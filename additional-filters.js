@@ -8,12 +8,12 @@
 // @grant         none
 // ==/UserScript==
 
-(function() {
+(function(wkof) {
 	'use strict';
 
 	var wkofMinimumVersion = '1.0.18';
 
-	if (!window.wkof) {
+	if (!wkof) {
 		var response = confirm('WaniKani Open Framework Additional Filters requires WaniKani Open Framework.\n Click "OK" to be forwarded to installation instructions.');
 
 		if (response) {
@@ -152,27 +152,33 @@
 	}
 
 	function registerFilters() {
-		if (!needToRegisterFilters)
+		if (!needToRegisterFilters) {
 			return;
+		}
 
 		supportedFilters.forEach(function(filterName) {
 			delete wkof.ItemData.registry.sources.wk_items.filters[filterName];
 		});
 
-		if (wkof.settings[settingsScriptId][recentLessonsFilterName])
+		if (wkof.settings[settingsScriptId][recentLessonsFilterName]) {
 			registerRecentLessonsFilter();
+		}
 
-		if (wkof.settings[settingsScriptId][leechTrainingFilterName])
+		if (wkof.settings[settingsScriptId][leechTrainingFilterName]) {
 			registerLeechTrainingFilter();
+		}
 
-		if (wkof.settings[settingsScriptId][timeUntilReviewFilterName])
+		if (wkof.settings[settingsScriptId][timeUntilReviewFilterName]) {
 			registerTimeUntilReviewFilter();
+		}
 
-		if (wkof.settings[settingsScriptId][failedLastReviewName])
+		if (wkof.settings[settingsScriptId][failedLastReviewName]) {
 			registerFailedLastReviewFilter();
+		}
 
-		if (wkof.settings[settingsScriptId][relatedItemsName])
+		if (wkof.settings[settingsScriptId][relatedItemsName]) {
 			registerRelatedItemsFilter();
+		}
 
 		needToRegisterFilters = false;
 	}
@@ -191,12 +197,14 @@
 	}
 
 	function recentLessonsFilter(filterValue, item) {
-		if (item.assignments === undefined)
+		if (item.assignments === undefined) {
 			return false;
+		}
 
 		var startedAt = item.assignments.started_at;
-		if (startedAt === null || startedAt === undefined)
+		if (startedAt === null || startedAt === undefined) {
 			return false;
+		}
 
 		var startedAtDate = new Date(startedAt);
 		var timeSinceStart = Date.now() - startedAtDate;
@@ -219,8 +227,9 @@
 	}
 
 	function leechTrainingFilter(filterValue, item) {
-		if (item.review_statistics === undefined)
+		if (item.review_statistics === undefined) {
 			return false;
+		}
 
 		var reviewStats = item.review_statistics;
 		var meaningScore = getLeechScore(reviewStats.meaning_incorrect, reviewStats.meaning_current_streak);
@@ -255,25 +264,30 @@
 	}
 
 	function convertPercentageToDecimal(percentage) {
-		if (percentage < 0)
+		if (percentage < 0) {
 			return 0;
+		}
 
-		if (percentage > 100)
+		if (percentage > 100) {
 			return 1;
+		}
 
 		return percentage / 100;
 	}
 
 	function timeUntilReviewFilter(decimal, item) {
-		if (item.assignments === undefined)
+		if (item.assignments === undefined) {
 			return false;
+		}
 
 		var srsStage = item.assignments.srs_stage;
-		if (srsStage === 0)
+		if (srsStage === 0) {
 			return false;
+		}
 
-		if (srsStage === 9)
+		if (srsStage === 9) {
 			return true;
+		}
 
 		var level = item.assignments.level;
 		var reviewAvailableAt = item.assignments.available_at;
@@ -311,20 +325,24 @@
 
 	function failedLastReviewFilter(filterValue, item) {
 		// review_statistics is undefined for new lessons.
-		if (item.assignments === undefined || item.review_statistics === undefined)
+		if (item.assignments === undefined || item.review_statistics === undefined) {
 			return false;
+		}
 
 		var assignments = item.assignments;
 		var srsStage = assignments.srs_stage;
 
-		if (srsStage === 0)
+		if (srsStage === 0) {
 			return false;
+		}
 
-		if (srsStage === 9)
+		if (srsStage === 9) {
 			return false;
+		}
 
-		if (!failedLastReview(item.review_statistics))
+		if (!failedLastReview(item.review_statistics)) {
 			return false;
+		}
 
 		var srsInvervalInHours = getSrsIntervalInHours(srsStage, assignments.level);
 		var lastReviewTimeInMs = getLastReviewTimeInMs(srsInvervalInHours, assignments.available_at);
@@ -404,4 +422,4 @@
 		});
 	}
 	// END Related Items
-})();
+})(window.wkof);
