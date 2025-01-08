@@ -3,7 +3,7 @@
 // @namespace     https://www.wanikani.com
 // @description   Additional filters for the WaniKani Open Framework
 // @author        seanblue
-// @version       1.3.1
+// @version       1.3.2
 // @include       https://www.wanikani.com/*
 // @grant         none
 // ==/UserScript==
@@ -289,7 +289,7 @@
 			return true;
 		}
 
-		var level = item.assignments.level;
+		var level = item.data.level;
 		var reviewAvailableAt = item.assignments.available_at;
 		var srsInvervalInHours = getSrsIntervalInHours(srsStage, level);
 
@@ -344,7 +344,7 @@
 			return false;
 		}
 
-		var srsInvervalInHours = getSrsIntervalInHours(srsStage, assignments.level);
+		var srsInvervalInHours = getSrsIntervalInHours(srsStage, data.level);
 		var lastReviewTimeInMs = getLastReviewTimeInMs(srsInvervalInHours, assignments.available_at);
 		var hoursSinceLastReview = (nowForFailedLastReview - lastReviewTimeInMs) / msPerHour;
 
